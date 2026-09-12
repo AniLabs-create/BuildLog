@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/*
+  Custom theme extensions.
+  Tailwind's default zinc palette jumps 800 -> 900 with no 750/850 steps,
+  but our design uses those in-between shades for subtle dark borders and
+  card backgrounds. Declaring them here makes classes like border-zinc-850
+  and bg-zinc-750 actually generate CSS.
+  https://tailwindcss.com/docs/theme
+*/
+@theme {
+  --color-zinc-750: #333338;
+  --color-zinc-850: #1f1f23;
+}
