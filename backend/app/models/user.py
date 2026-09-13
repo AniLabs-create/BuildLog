@@ -27,6 +27,9 @@ class User(Base):
     portfolio_url = Column(String(500), nullable=True)
     # "public" or "private" — private accounts hide content until a follow request is accepted (Milestone 9/10)
     profile_visibility = Column(String(10), default="public", nullable=False)
+    # GitHub account link (OAuth). GitHub's numeric user ID is stable even if
+    # the username changes, so linking uses this — never just username/email.
+    github_id = Column(Integer, unique=True, nullable=True, index=True)
     # False until the user finishes first-time onboarding at /setup
     profile_setup_complete = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

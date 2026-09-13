@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     # CORS configuration: comma-separated list of allowed origins
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # GitHub OAuth (leave CLIENT_ID empty to disable "Continue with GitHub")
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    # Full callback URL registered on the GitHub OAuth app.
+    # Leave empty to derive it from the incoming request (works locally).
+    GITHUB_REDIRECT_URI: str = ""
+    # Where the OAuth callback sends the browser afterwards (the React app)
+    FRONTEND_URL: str = "http://localhost:5173"
+
     @property
     def cors_origins(self) -> list[str]:
         """Convert comma-separated origin string into a list of strings."""

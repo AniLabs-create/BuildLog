@@ -50,16 +50,18 @@ export const SetupPage: React.FC = () => {
   const { user, refreshUser } = useAuth();
 
   const [step, setStep] = useState(1);
+  // GitHub-linked accounts arrive with prefilled username/avatar/name/GitHub URL
+  // (set by the backend from their GitHub profile). Email accounts start blank.
   const [form, setForm] = useState<SetupFormState>({
-    avatarUrl: '',
+    avatarUrl: user?.avatarUrl ?? '',
     username: user?.username ?? '',
-    displayName: '',
+    displayName: user?.displayName ?? '',
     bio: '',
     college: '',
     branch: '',
     year: '',
     skills: '',
-    githubUrl: '',
+    githubUrl: user?.githubUrl ?? '',
     linkedinUrl: '',
     portfolioUrl: '',
     profileVisibility: 'public',

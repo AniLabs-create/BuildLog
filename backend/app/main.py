@@ -52,7 +52,7 @@ def run_startup_migrations() -> None:
                     text("ALTER TABLE projects ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'public'")
                 )
 
-            # Milestone 5: profile columns for account setup
+            # Milestone 5: profile columns for account setup (+ GitHub OAuth link)
             existing = {
                 row[1]
                 for row in conn.execute(text("PRAGMA table_info('users')")).fetchall()
@@ -66,26 +66,27 @@ def run_startup_migrations() -> None:
                 "portfolio_url": "VARCHAR(500)",
                 "profile_visibility": "VARCHAR(10) NOT NULL DEFAULT 'public'",
                 "profile_setup_complete": "BOOLEAN NOT NULL DEFAULT 0",
+                "github_id": "INTEGER",
             }
             for column, definition in user_columns.items():
                 if column not in existing:
                     conn.execute(text(f"ALTER TABLE users ADD COLUMN {column} {definition}"))
                     added_profile_columns = True
         else:
-            # PostgreSQL: let the database raise if the column already exists
-            try:
-                conn.execute(
-                    text("ALTER TABLE projects ADD COLUMN slug VARCHAR(140) NOT NULL DEFAULT ''")
-                )
-                conn.execute(
-                    text("ALTER TABLE users ADD COLUMN profile_setup_complete BOOLEAN NOT NULL DEFAULT FALSE")
-                )
-                conn.execute(
-                    text("ALTER TABLE projects ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'public'")
-                )
-                added_profile_columns = True
-            except Exception:
-                pass
+            # PostgreSQL: add each column independently, ignoring "already exists"
+            # (one shared try/except would abort before later statements run)
+            pg_statements = [
+                "ALTER TABLE projects ADD COLUMN slug VARCHAR(140) NOT NULL DEFAULT ''",
+                "ALTER TABLE projects ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'public'",
+                "ALTER TABLE users ADD COLUMN profile_setup_complete BOOLEAN NOT NULL DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN github_id INTEGER",
+            ]
+            for statement in pg_statements:
+                try:
+                    conn.execute(text(statement))
+                    added_profile_columns = True
+                except Exception:
+                    pass  # column already exists
 
     # Backfill slugs for projects created before slugs existed
     from app.utils.slug import generate_unique_slug

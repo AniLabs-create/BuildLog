@@ -7,6 +7,7 @@ BuildLog is a developer building platform for students, beginner developers, hac
 ## Features (V1)
 
 - **Authentication** — Sign up, login, logout, JWT-protected routes, bcrypt-hashed passwords
+- **"Continue with GitHub"** — Real GitHub OAuth (authorization-code flow) with account linking by GitHub ID or verified email; new GitHub users land in onboarding with their profile prefilled
 - **Account setup** — 6-step onboarding wizard with live username availability
 - **Profiles** — Display name, bio, college/branch/year, skills, avatar, GitHub/LinkedIn/portfolio
 - **Projects** — Full CRUD with status, tech stack, links, and public/private visibility
@@ -81,6 +82,16 @@ By default the backend uses a local SQLite file (`buildlog.db`) so it runs with 
 ```
 DATABASE_URL=postgresql://user:password@ep-xyz.neon.tech/neondb?sslmode=require
 ```
+
+> Tip: never point your local dev server at the production database. Set `VITE_API_URL=http://localhost:8000/api` in `frontend/.env` (already gitignored) so the local frontend talks to the local backend.
+
+### GitHub OAuth setup
+
+1. Create an OAuth App at https://github.com/settings/developers
+2. Callback URL:
+   - local: `http://localhost:8000/api/auth/github/callback`
+   - production: `https://buildlog-zab9.onrender.com/api/auth/github/callback`
+3. Set in `backend/.env` (local) or Render environment (prod): `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_REDIRECT_URI`, and `FRONTEND_URL` (the React app URL used after login).
 
 ### Frontend
 

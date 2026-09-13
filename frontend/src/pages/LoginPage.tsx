@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import { GitHubButton } from '../components/auth/GitHubButton';
 import { useAuth } from '../hooks/useAuth';
+import { API_BASE_URL } from '../services/api';
 import { getErrorMessage } from '../utils/errors';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Errors coming back from the GitHub OAuth flow (?oauth_error=...)
+  const oauthError = searchParams.get('oauth_error');
 
   // Already signed in? Never show the login form — send them to the app.
   if (isAuthenticated && !isLoading) {
@@ -55,11 +61,23 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          {error && (
+          {(oauthError || error) && (
             <div className="mb-6 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400">
-              {error}
+              {oauthError || error}
             </div>
           )}
+
+          <div className="mb-5">
+            <GitHubButton href={`${API_BASE_URL}/auth/github/login`} />
+          </div>
+
+          <div className="mb-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-zinc-800" />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-zinc-600">
+              or with email
+            </span>
+            <div className="h-px flex-1 bg-zinc-800" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

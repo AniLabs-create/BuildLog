@@ -12,6 +12,7 @@ import { EditProjectPage } from './pages/EditProjectPage';
 import { CreateBuildLogPage } from './pages/CreateBuildLogPage';
 import { EditBuildLogPage } from './pages/EditBuildLogPage';
 import { SetupPage } from './pages/SetupPage';
+import { OAuthCallbackPage } from './pages/OAuthCallbackPage';
 import { FeedPage } from './pages/FeedPage';
 import { SearchPage } from './pages/SearchPage';
 import { NotificationsPage } from './pages/NotificationsPage';
@@ -36,6 +37,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
             {/* Public developer portfolio & project pages (Milestones 8 & 9) */}
             <Route path="/u/:username" element={<PublicProfilePage />} />
