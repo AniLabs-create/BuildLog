@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
 import { updateMyProfile } from '../services/users';
@@ -16,6 +16,11 @@ import type { ProfileVisibility } from '../types';
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, refreshUser, logout } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Feedback after returning from the GitHub connect flow
+  const githubConnected = searchParams.get('github') === 'connected';
+  const githubError = searchParams.get('github');
 
   const [displayName, setDisplayName] = useState(() => user?.displayName ?? '');
   const [bio, setBio] = useState(() => user?.bio ?? '');
@@ -34,6 +39,16 @@ export const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Where the Integrations section mounts (feedback after GitHub connect)
+  const integrationsRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (githubConnected) {
+      // arriving back from GitHub — the section refetches its own status
+      integrationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [githubConnected]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,8 +166,18 @@ export const SettingsPage: React.FC = () => {
         </section>
 
         {/* Integrations */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+        <section ref={integrationsRef} className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
           <h2 className="text-sm font-bold text-white mb-1.5">Integrations</h2>
+          {githubConnected && (
+            <div className="mb-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-400">
+              ✓ GitHub connected. Run <span className="font-semibold">Sync Now</span> to import your repositories.
+            </div>
+          )}
+          {githubError && !githubConnected && (
+            <div className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400">
+              GitHub connection failed: {githubError}
+            </div>
+          )}
           <p className="text-xs text-zinc-500 mb-4">
             Connect developer platforms to import repositories and show your coding progress.
           </p>

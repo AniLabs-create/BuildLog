@@ -136,8 +136,13 @@ async def github_connect_callback(
             "cancelled" if error == "access_denied" else "GitHub connection failed."
         )
 
+    # CSRF: state is a signed, expiring JWT (typ=github_connect) that GitHub
+    # echoes back verbatim — unforgeable without SECRET_KEY. The HttpOnly
+    # cookie is set for defense-in-depth, but browsers DROP cookies from
+    # cross-origin fetch responses, so absence must not reject the flow.
+    # A MISMATCH (cookie present, different value) is still a hard reject.
     cookie_state = request.cookies.get(COOKIE_NAME)
-    if not state or not cookie_state or state != cookie_state:
+    if cookie_state is not None and cookie_state != state:
         return back("Connection could not be verified. Please try again.")
 
     payload = decode_access_token(state)
