@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
 import { updateMyProfile } from '../services/users';
+import { IntegrationsSection } from '../components/integrations/IntegrationsSection';
 import { getErrorMessage } from '../utils/errors';
 import type { ProfileVisibility } from '../types';
 
@@ -147,6 +148,15 @@ export const SettingsPage: React.FC = () => {
               <input id="setPortfolio" type="url" value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} placeholder="your-site.dev" className={inputClass} />
             </div>
           </div>
+        </section>
+
+        {/* Integrations */}
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+          <h2 className="text-sm font-bold text-white mb-1.5">Integrations</h2>
+          <p className="text-xs text-zinc-500 mb-4">
+            Connect developer platforms to import repositories and show your coding progress.
+          </p>
+          <IntegrationsSection />
         </section>
 
         {/* Visibility */}

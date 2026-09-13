@@ -2,12 +2,14 @@ import { apiRequest } from './api';
 import type { FeedItem } from '../types';
 
 /**
- * Feed Service — the home activity feed (me + people I follow).
+ * Feed Service — the home activity feed (me + people I follow), combining
+ * BuildLog events with connected-platform activity (GitHub, LeetCode).
  */
 
 interface RawFeedItem {
-  id: number;
-  type: FeedItem['type'];
+  id: string;
+  source?: FeedItem['source'];
+  type: string;
   action_text: string;
   created_at: string;
   actor: {
@@ -21,12 +23,15 @@ interface RawFeedItem {
     status?: string | null;
   } | null;
   built_text?: string | null;
+  url?: string | null;
+  icon?: string | null;
 }
 
 export async function getHomeFeed(): Promise<FeedItem[]> {
   const data = await apiRequest<{ items: RawFeedItem[] }>('/feed');
   return (data.items || []).map((i) => ({
     id: i.id,
+    source: i.source ?? 'buildlog',
     type: i.type,
     actionText: i.action_text,
     createdAt: i.created_at,
@@ -43,5 +48,7 @@ export async function getHomeFeed(): Promise<FeedItem[]> {
         }
       : null,
     builtText: i.built_text ?? undefined,
+    url: i.url ?? undefined,
+    icon: i.icon ?? undefined,
   }));
 }

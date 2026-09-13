@@ -128,6 +128,7 @@ interface RawPublicProfile {
   following_count?: number;
   follow_state?: string;
   is_private?: boolean;
+  integrations?: Record<string, unknown>;
   current_streak: number;
   longest_streak: number;
   project_count: number;
@@ -146,6 +147,10 @@ interface RawProjectSummary {
   github_url?: string | null;
   demo_url?: string | null;
   visibility?: string;
+  source?: string;
+  stars?: number;
+  forks?: number;
+  last_synced_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -194,6 +199,7 @@ export async function getPublicProfile(username: string): Promise<PublicProfile>
     followingCount: data.following_count ?? 0,
     followState: (data.follow_state as PublicProfile['followState']) ?? 'NOT_FOLLOWING',
     isPrivate: data.is_private ?? false,
+    integrations: (data.integrations ?? undefined) as PublicProfile['integrations'],
     currentStreak: data.current_streak,
     longestStreak: data.longest_streak,
     projectCount: data.project_count,
@@ -225,6 +231,10 @@ export async function getPublicUserProjects(username: string): Promise<Project[]
     githubUrl: p.github_url ?? undefined,
     demoUrl: p.demo_url ?? undefined,
     visibility: (p.visibility as Project['visibility']) ?? 'public',
+    source: (p.source as Project['source']) ?? 'manual',
+    stars: p.stars ?? 0,
+    forks: p.forks ?? 0,
+    lastSyncedAt: p.last_synced_at ?? undefined,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
   }));
@@ -250,6 +260,10 @@ export async function getPublicProject(
       githubUrl: data.project.github_url ?? undefined,
       demoUrl: data.project.demo_url ?? undefined,
       visibility: (data.project.visibility as Project['visibility']) ?? 'public',
+      source: (data.project.source as Project['source']) ?? 'manual',
+      stars: data.project.stars ?? 0,
+      forks: data.project.forks ?? 0,
+      lastSyncedAt: data.project.last_synced_at ?? undefined,
       createdAt: data.project.created_at,
       updatedAt: data.project.updated_at,
     },

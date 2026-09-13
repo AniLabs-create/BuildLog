@@ -29,11 +29,17 @@ export const FeedPage: React.FC = () => {
     loadFeed();
   }, []);
 
-  const typeIcon: Record<FeedItem['type'], string> = {
+  const typeIcon: Record<string, string> = {
     project_created: '🚀',
     project_completed: '✅',
     project_deployed: '🌍',
     new_build_log: '🚀',
+  };
+
+  const sourceBadge: Record<string, { label: string; className: string }> = {
+    buildlog: { label: 'BuildLog', className: 'border-zinc-700 text-zinc-400' },
+    github: { label: 'GitHub', className: 'border-purple-500/40 text-purple-400' },
+    leetcode: { label: 'LeetCode', className: 'border-amber-500/40 text-amber-400' },
   };
 
   if (loading) {
@@ -111,20 +117,37 @@ export const FeedPage: React.FC = () => {
                       >
                         {item.actor.displayName || item.actor.username}
                       </Link>{' '}
-                      <span className="text-zinc-400">{item.actionText}</span>{' '}
-                      {item.project &&
-                        (item.project.slug ? (
-                          <Link
-                            to={`/u/${item.actor.username}/${item.project.slug}`}
+                      {item.source === 'buildlog' ? (
+                        <>
+                          <span className="text-zinc-400">{item.actionText}</span>{' '}
+                          {item.project &&
+                            (item.project.slug ? (
+                              <Link
+                                to={`/u/${item.actor.username}/${item.project.slug}`}
+                                className="font-semibold text-zinc-200 hover:text-white transition"
+                              >
+                                {item.project.name}
+                              </Link>
+                            ) : (
+                              <span className="font-semibold text-zinc-500 italic">
+                                {item.project.name}
+                              </span>
+                            ))}
+                        </>
+                      ) : (
+                        item.url ? (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noreferrer"
                             className="font-semibold text-zinc-200 hover:text-white transition"
                           >
-                            {item.project.name}
-                          </Link>
+                            {item.actionText}
+                          </a>
                         ) : (
-                          <span className="font-semibold text-zinc-500 italic">
-                            {item.project.name}
-                          </span>
-                        ))}
+                          <span className="font-semibold text-zinc-200">{item.actionText}</span>
+                        )
+                      )}
                     </p>
 
                     {item.builtText && (
@@ -133,8 +156,16 @@ export const FeedPage: React.FC = () => {
                       </p>
                     )}
 
-                    <p className="mt-2 font-mono text-[11px] text-zinc-600">
-                      {typeIcon[item.type]} {dateStr}
+                    <p className="mt-2 flex items-center gap-2 font-mono text-[11px] text-zinc-600">
+                      <span>{item.icon || typeIcon[item.type] || '•'}</span>
+                      <span>{dateStr}</span>
+                      {sourceBadge[item.source] && (
+                        <span
+                          className={`rounded border px-1.5 py-0.5 text-[9px] uppercase tracking-wider ${sourceBadge[item.source].className}`}
+                        >
+                          {sourceBadge[item.source].label}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>

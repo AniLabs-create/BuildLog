@@ -16,10 +16,12 @@ from app.routes import (
     follow_requests_router,
     notifications_router,
     feed_router,
+    integrations_router,
 )
 
 # Import all models to ensure they are registered with SQLAlchemy Base metadata
 import app.models  # noqa: F401
+import app.integrations  # noqa: F401  (registers integration providers)
 
 def run_startup_migrations() -> None:
     """
@@ -52,6 +54,35 @@ def run_startup_migrations() -> None:
                     text("ALTER TABLE projects ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'public'")
                 )
 
+            # Integrations milestone: project sync-identity columns
+            project_new_cols = {
+                "source": "VARCHAR(20) NOT NULL DEFAULT 'manual'",
+                "external_provider": "VARCHAR(30)",
+                "external_id": "VARCHAR(100)",
+                "stars": "INTEGER NOT NULL DEFAULT 0",
+                "forks": "INTEGER NOT NULL DEFAULT 0",
+                "last_synced_at": "TIMESTAMP",
+            }
+            for column, definition in project_new_cols.items():
+                if column not in project_cols:
+                    conn.execute(text(f"ALTER TABLE projects ADD COLUMN {column} {definition}"))
+
+            # Integration tables may predate newer columns (create_all never alters)
+            if "github_integrations" in (
+                t[0] for t in conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
+            ):
+                gi_cols = {
+                    row[1]
+                    for row in conn.execute(text("PRAGMA table_info('github_integrations')")).fetchall()
+                }
+                if "stats_cache" not in gi_cols:
+                    conn.execute(text("ALTER TABLE github_integrations ADD COLUMN stats_cache JSON"))
+
+                # SQLite never enforced FK cascades before PRAGMA foreign_keys=ON
+                # was enabled (see database.py) — clean up rows from deleted users.
+                conn.execute(text("DELETE FROM activities WHERE user_id NOT IN (SELECT id FROM users)"))
+                conn.execute(text("DELETE FROM external_activities WHERE user_id NOT IN (SELECT id FROM users)"))
+
             # Milestone 5: profile columns for account setup (+ GitHub OAuth link)
             existing = {
                 row[1]
@@ -78,6 +109,13 @@ def run_startup_migrations() -> None:
             pg_statements = [
                 "ALTER TABLE projects ADD COLUMN slug VARCHAR(140) NOT NULL DEFAULT ''",
                 "ALTER TABLE projects ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'public'",
+                "ALTER TABLE projects ADD COLUMN source VARCHAR(20) NOT NULL DEFAULT 'manual'",
+                "ALTER TABLE projects ADD COLUMN external_provider VARCHAR(30)",
+                "ALTER TABLE projects ADD COLUMN external_id VARCHAR(100)",
+                "ALTER TABLE projects ADD COLUMN stars INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE projects ADD COLUMN forks INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE projects ADD COLUMN last_synced_at TIMESTAMP",
+                "ALTER TABLE github_integrations ADD COLUMN stats_cache JSON",
                 "ALTER TABLE users ADD COLUMN profile_setup_complete BOOLEAN NOT NULL DEFAULT FALSE",
                 "ALTER TABLE users ADD COLUMN github_id INTEGER",
             ]
@@ -156,6 +194,7 @@ app.include_router(follows_router, prefix="/api")
 app.include_router(follow_requests_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(feed_router, prefix="/api")
+app.include_router(integrations_router, prefix="/api")
 
 @app.get("/", tags=["root"])
 def root():

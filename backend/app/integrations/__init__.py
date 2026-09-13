@@ -1,5 +1,7 @@
 """Developer platform integrations.
 
-Each subpackage implements one provider against the BaseIntegration
-interface (see base.py). Providers self-register into the shared registry.
+Importing this package registers every built-in provider into the shared
+registry (base.registry), so routes can do registry.get("github") etc.
 """
+from app.integrations.github.integration import github_integration  # noqa: F401
+from app.integrations.leetcode.integration import leetcode_integration  # noqa: F401

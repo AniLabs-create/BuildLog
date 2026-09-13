@@ -113,6 +113,41 @@ export const PublicProfilePage: React.FC = () => {
         }
       />
 
+      {/* Connected-platform stats (real synced data; hidden on private wall) */}
+      {profile.integrations && (profile.integrations.github || profile.integrations.leetcode) && (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {profile.integrations.github && (
+            <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-wider text-purple-400">GitHub</p>
+              <p className="mt-1.5 text-sm text-zinc-300">
+                @{profile.integrations.github.username}
+              </p>
+              <p className="mt-1 text-sm text-zinc-400">
+                {profile.integrations.github.repositories ?? 0} repositories
+                {(profile.integrations.github.stars ?? 0) > 0 &&
+                  ` · ⭐ ${profile.integrations.github.stars} stars`}
+              </p>
+            </div>
+          )}
+          {profile.integrations.leetcode && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-wider text-amber-400">LeetCode</p>
+              <p className="mt-1.5 text-sm text-zinc-300">
+                @{profile.integrations.leetcode.username}
+                {profile.integrations.leetcode.solved !== undefined &&
+                  ` · ${profile.integrations.leetcode.solved} solved`}
+              </p>
+              <p className="mt-1 text-sm text-zinc-400">
+                {profile.integrations.leetcode.easy !== undefined &&
+                  `E ${profile.integrations.leetcode.easy} · M ${profile.integrations.leetcode.medium} · H ${profile.integrations.leetcode.hard}`}
+                {profile.integrations.leetcode.ranking !== undefined &&
+                  ` · #${profile.integrations.leetcode.ranking}`}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Private account wall */}
       {profile.isPrivate ? (
         <div className="mt-10 rounded-xl border border-zinc-800 bg-zinc-900/30 p-14 text-center">

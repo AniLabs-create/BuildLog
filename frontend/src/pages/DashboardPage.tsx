@@ -8,8 +8,9 @@ import { useAuth } from '../hooks/useAuth';
 import { getProjects } from '../services/projects';
 import { getDashboardSummary } from '../services/stats';
 import type { DashboardSummary } from '../services/stats';
+import { getIntegrationsStatus } from '../services/integrations';
 import { getErrorMessage } from '../utils/errors';
-import type { Project } from '../types';
+import type { Project, IntegrationsStatus } from '../types';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export const DashboardPage: React.FC = () => {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [integrations, setIntegrations] = useState<IntegrationsStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,12 +26,14 @@ export const DashboardPage: React.FC = () => {
     async function loadDashboard() {
       try {
         setLoading(true);
-        const [projectsData, summaryData] = await Promise.all([
+        const [projectsData, summaryData, integrationsData] = await Promise.all([
           getProjects(),
           getDashboardSummary(),
+          getIntegrationsStatus().catch(() => null),
         ]);
         setProjects(projectsData);
         setSummary(summaryData);
+        setIntegrations(integrationsData);
       } catch (err: unknown) {
         console.error('Failed to load dashboard:', err);
         setError(getErrorMessage(err, 'Failed to load dashboard data.'));
@@ -111,6 +115,33 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Developer identity row (real synced integration stats) */}
+      {integrations && (integrations.github || integrations.leetcode) && (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {integrations.github && (
+            <div className="rounded-xl border border-zinc-850 bg-zinc-900/50 p-4">
+              <p className="font-mono text-[11px] text-zinc-500 uppercase">GitHub</p>
+              <p className="mt-1.5 text-sm text-zinc-300">
+                @{integrations.github.username} · {integrations.github.stats?.repositories ?? 0} repositories
+                {(integrations.github.stats?.stars ?? 0) > 0 && ` · ⭐ ${integrations.github.stats?.stars}`}
+              </p>
+            </div>
+          )}
+          {integrations.leetcode && (
+            <div className="rounded-xl border border-zinc-850 bg-zinc-900/50 p-4">
+              <p className="font-mono text-[11px] text-zinc-500 uppercase">LeetCode</p>
+              <p className="mt-1.5 text-sm text-zinc-300">
+                @{integrations.leetcode.username}
+                {integrations.leetcode.stats?.solved !== undefined &&
+                  ` · ${integrations.leetcode.stats.solved} solved`}
+                {integrations.leetcode.stats?.ranking !== undefined &&
+                  ` · #${integrations.leetcode.stats.ranking}`}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Projects Column */}
         <div className="lg:col-span-2 space-y-6">
@@ -160,6 +191,11 @@ export const DashboardPage: React.FC = () => {
                           {project.name}
                         </Link>
                         <ProjectStatus status={project.status} />
+                        {project.source === 'github' && (
+                          <span className="rounded border border-purple-500/40 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-purple-400">
+                            GitHub
+                          </span>
+                        )}
                       </div>
                       <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
                         {project.description}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import { IntegrationsSection } from '../components/integrations/IntegrationsSection';
 import { useAuth } from '../hooks/useAuth';
 import {
   checkUsernameAvailability,
@@ -12,12 +13,12 @@ import type { ProfileVisibility } from '../types';
 /**
  * SetupPage — first-time account onboarding (/setup).
  *
- * A 6-step wizard that feels like onboarding rather than a settings form.
- * New accounts land here automatically after signup; authenticated users
- * with profileSetupComplete === false are redirected here by the router.
+ * A 7-step wizard that feels like onboarding rather than a settings form.
+ * Step 6 offers optional developer-account connections (GitHub / LeetCode);
+ * connecting GitHub redirects away, so the wizard saves profile progress first.
  */
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/;
 
@@ -27,6 +28,7 @@ const STEPS: Array<{ title: string; subtitle: string }> = [
   { title: 'Tell us about yourself.', subtitle: 'Help others understand who you are.' },
   { title: 'Your skills and links.', subtitle: 'Show what you work with and where to find you.' },
   { title: 'Public or private?', subtitle: 'You can change this anytime in settings.' },
+  { title: 'Connect your developer accounts.', subtitle: 'Optional — make your profile more powerful.' },
   { title: 'Review and finish.', subtitle: 'Double-check everything looks right.' },
 ];
 
@@ -123,6 +125,29 @@ export const SetupPage: React.FC = () => {
 
   const setField = <K extends keyof SetupFormState>(field: K, value: SetupFormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  /** Persists the wizard form before the GitHub redirect leaves the page,
+      so returning to /setup restores progress instead of losing it. */
+  const saveProgressBeforeRedirect = async () => {
+    try {
+      await updateMyProfile({
+        displayName: form.displayName.trim() || undefined,
+        bio: form.bio.trim() || undefined,
+        college: form.college.trim() || undefined,
+        branch: form.branch.trim() || undefined,
+        year: form.year.trim() || undefined,
+        skills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
+        avatarUrl: form.avatarUrl.trim() || undefined,
+        githubUrl: form.githubUrl.trim() || undefined,
+        linkedinUrl: form.linkedinUrl.trim() || undefined,
+        portfolioUrl: form.portfolioUrl.trim() || undefined,
+        profileVisibility: form.profileVisibility,
+      });
+      await refreshUser();
+    } catch {
+      // Progress save is best-effort; the GitHub connection still proceeds.
+    }
   };
 
   const handleFinish = async () => {
@@ -440,8 +465,17 @@ export const SetupPage: React.FC = () => {
           </div>
         )}
 
-        {/* Step 6: Review */}
+        {/* Step 6: Integrations (optional) */}
         {step === 6 && (
+          <IntegrationsSection
+            compact
+            onBeforeRedirect={saveProgressBeforeRedirect}
+            onChanged={refreshUser}
+          />
+        )}
+
+        {/* Step 7: Review */}
+        {step === 7 && (
           <div className="flex flex-col items-center gap-5 text-center">
             {form.avatarUrl ? (
               <img

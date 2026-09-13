@@ -21,6 +21,12 @@ class ProjectResponse(ProjectBase):
     id: int
     user_id: int
     slug: str = ""
+    source: str = "manual"          # manual | github
+    external_provider: Optional[str] = None
+    external_id: Optional[str] = None
+    stars: int = 0
+    forks: int = 0
+    last_synced_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 

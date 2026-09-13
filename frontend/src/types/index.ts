@@ -86,6 +86,11 @@ export interface Project {
   demoUrl?: string;
   /** Private projects are visible to the owner only */
   visibility: ProfileVisibility;
+  /** Where this project came from: created here or synced from GitHub */
+  source: 'manual' | 'github';
+  stars: number;
+  forks: number;
+  lastSyncedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -124,8 +129,9 @@ export interface AppNotification {
 
 /** One activity entry in the home feed. */
 export interface FeedItem {
-  id: number;
-  type: 'project_created' | 'project_completed' | 'project_deployed' | 'new_build_log';
+  id: string;
+  source: 'buildlog' | 'github' | 'leetcode' | string;
+  type: string;
   actionText: string;
   createdAt: string;
   actor: {
@@ -139,6 +145,71 @@ export interface FeedItem {
     status?: string | null;
   } | null;
   builtText?: string | null;
+  url?: string | null;
+  icon?: string | null;
+}
+
+// ---------- Integrations ----------
+
+export interface GitHubStatus {
+  username: string;
+  avatar_url?: string;
+  scopes?: string;
+  connected_at: string;
+  last_synced_at?: string | null;
+  stats: { repositories?: number; stars?: number };
+}
+
+export interface LeetCodeStatus {
+  username: string;
+  connected_at: string;
+  last_synced_at?: string | null;
+  stats: {
+    solved?: number;
+    easy?: number;
+    medium?: number;
+    hard?: number;
+    ranking?: number;
+    profile_url?: string;
+  };
+}
+
+export interface IntegrationsStatus {
+  github: GitHubStatus | null;
+  leetcode: LeetCodeStatus | null;
+}
+
+export interface SyncSummary {
+  repositories: number;
+  created: number;
+  updated: number;
+  new_activity: number;
+}
+
+export interface SyncedRepository {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  github_url?: string;
+  stars: number;
+  forks: number;
+  visibility: ProfileVisibility;
+  last_synced_at?: string | null;
+}
+
+/** Connected-platform stats shown on public profiles (real synced data) */
+export interface ProfileIntegrations {
+  github?: { username: string; repositories?: number; stars?: number };
+  leetcode?: {
+    username: string;
+    solved?: number;
+    easy?: number;
+    medium?: number;
+    hard?: number;
+    ranking?: number;
+    profile_url?: string;
+  };
 }
 
 /**
@@ -211,6 +282,8 @@ export interface PublicProfile {
   followState: FollowState;
   /** True when this is a private account viewed by a non-follower */
   isPrivate: boolean;
+  /** Connected-platform stats — absent when none connected or private wall */
+  integrations?: ProfileIntegrations;
 }
 
 /**

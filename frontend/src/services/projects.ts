@@ -22,6 +22,10 @@ interface RawProjectResponse {
   github_url?: string | null;
   demo_url?: string | null;
   visibility?: string;
+  source?: string;
+  stars?: number;
+  forks?: number;
+  last_synced_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +43,10 @@ function mapProject(data: RawProjectResponse): Project {
     githubUrl: data.github_url || undefined,
     demoUrl: data.demo_url || undefined,
     visibility: (data.visibility as Project['visibility']) || 'public',
+    source: (data.source as Project['source']) || 'manual',
+    stars: data.stars ?? 0,
+    forks: data.forks ?? 0,
+    lastSyncedAt: data.last_synced_at ?? undefined,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };

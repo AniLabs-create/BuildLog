@@ -5,6 +5,7 @@ from app.models.follow import Follow, FollowRequest
 from app.models.notification import Notification
 from app.models.activity import Activity
 from app.models.integration import GitHubIntegration, LeetCodeIntegration
+from app.models.external_activity import ExternalActivity
 
 __all__ = [
     "User",
@@ -16,4 +17,5 @@ __all__ = [
     "Activity",
     "GitHubIntegration",
     "LeetCodeIntegration",
+    "ExternalActivity",
 ]

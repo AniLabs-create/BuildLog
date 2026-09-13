@@ -255,6 +255,30 @@ def get_public_profile(username: str, db: Session = Depends(get_db), viewer: Opt
         "log_count": log_count,
         "recent_activity": recent_activity,
     })
+
+    # Connected-platform stats (real synced data only, never invented).
+    # Hidden on the private wall just like the rest of the content.
+    from app.models.integration import GitHubIntegration, LeetCodeIntegration
+    integrations: dict = {}
+    gh_integration = (
+        db.query(GitHubIntegration).filter(GitHubIntegration.user_id == user.id).first()
+    )
+    if gh_integration and gh_integration.stats_cache:
+        integrations["github"] = {
+            "username": gh_integration.github_username,
+            **gh_integration.stats_cache,
+        }
+    lc_integration = (
+        db.query(LeetCodeIntegration).filter(LeetCodeIntegration.user_id == user.id).first()
+    )
+    if lc_integration and lc_integration.profile_cache:
+        integrations["leetcode"] = {
+            "username": lc_integration.leetcode_username,
+            **lc_integration.profile_cache,
+        }
+    if integrations:
+        base["integrations"] = integrations
+
     return base
 
 

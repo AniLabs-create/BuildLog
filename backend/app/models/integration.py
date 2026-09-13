@@ -36,6 +36,10 @@ class GitHubIntegration(Base):
     connected_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_synced_at = Column(DateTime, nullable=True)
 
+    # Snapshot of aggregate stats from the last repo sync (repository count,
+    # total stars, ...) so profiles can show real numbers without live calls.
+    stats_cache = Column(JSON, nullable=True)
+
 
 class LeetCodeIntegration(Base):
     """

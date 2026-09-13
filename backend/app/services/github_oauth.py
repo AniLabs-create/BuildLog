@@ -38,14 +38,18 @@ def generate_state() -> str:
     return secrets.token_urlsafe(32)
 
 
-def build_authorize_url(state: str, redirect_uri: str) -> str:
-    """The URL the browser is redirected to so the user approves BuildLog on GitHub."""
+def build_authorize_url(state: str, redirect_uri: str, scope: str = "read:user user:email") -> str:
+    """
+    The URL the browser is redirected to so the user approves BuildLog on GitHub.
+    Default scope = login. The "Connect GitHub" integration passes a wider
+    scope (repo) for repository sync and solution pushes.
+    """
     from urllib.parse import urlencode
 
     params = {
         "client_id": settings.GITHUB_CLIENT_ID,
         "redirect_uri": redirect_uri,
-        "scope": "read:user user:email",
+        "scope": scope,
         "state": state,
     }
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"

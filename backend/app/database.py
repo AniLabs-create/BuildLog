@@ -1,5 +1,6 @@
 from typing import Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from app.config import settings
 
@@ -15,6 +16,18 @@ engine = create_engine(
     connect_args=connect_args,
     echo=settings.DEBUG,  # Log SQL queries in debug mode for learning
 )
+
+
+@event.listens_for(Engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+    """
+    SQLite ignores ON DELETE CASCADE unless foreign keys are enabled per
+    connection. Without this, deleting a user would leave orphaned rows.
+    """
+    if settings.normalized_database_url.startswith("sqlite"):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 # Create a scoped sessionmaker
 SessionLocal = sessionmaker(
