@@ -17,6 +17,7 @@ from app.routes import (
     notifications_router,
     feed_router,
     integrations_router,
+    social_router,
 )
 
 # Import all models to ensure they are registered with SQLAlchemy Base metadata
@@ -35,6 +36,8 @@ SCHEMA_MIGRATIONS: list[tuple[str, str, str]] = [
     ("projects", "stars", "INTEGER NOT NULL DEFAULT 0"),
     ("projects", "forks", "INTEGER NOT NULL DEFAULT 0"),
     ("projects", "last_synced_at", "TIMESTAMP"),
+    ("projects", "github_owner", "VARCHAR(100)"),
+    ("projects", "readme_content", "TEXT"),
     ("users", "display_name", "VARCHAR(100)"),
     ("users", "bio", "VARCHAR(500)"),
     ("users", "college", "VARCHAR(150)"),
@@ -198,6 +201,7 @@ app.include_router(follow_requests_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(feed_router, prefix="/api")
 app.include_router(integrations_router, prefix="/api")
+app.include_router(social_router, prefix="/api")
 
 @app.get("/", tags=["root"])
 def root():

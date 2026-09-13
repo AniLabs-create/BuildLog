@@ -27,6 +27,9 @@ class Project(Base):
     stars = Column(Integer, default=0, nullable=False)
     forks = Column(Integer, default=0, nullable=False)
     last_synced_at = Column(DateTime, nullable=True)
+    # GitHub-specific (synced repos): the repo owner login and README markdown
+    github_owner = Column(String(100), nullable=True)
+    readme_content = Column(Text, nullable=True)
     tech_stack = Column(JSON, default=list, nullable=False)       # List of strings e.g. ["Python", "FastAPI", "React"]
     github_url = Column(String(500), nullable=True)
     demo_url = Column(String(500), nullable=True)

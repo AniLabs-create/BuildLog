@@ -17,6 +17,13 @@ def _serialize(notification: Notification, actor: User) -> dict:
         "follow_request": "requested to follow you.",
         "follow_accepted": "accepted your follow request.",
         "new_follower": "started following you.",
+        "project_star": "🔥 Log Starred your project.",
+        "build_log_star": "🔥 Log Starred your build log.",
+        "comment_star": "🔥 Log Starred your comment.",
+        "suggestion_star": "🔥 Log Starred your suggestion.",
+        "project_comment": "commented on your project.",
+        "build_log_comment": "commented on your build log.",
+        "suggestion_comment": "commented on your suggestion.",
     }
     return {
         "id": notification.id,

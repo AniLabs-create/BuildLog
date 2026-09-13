@@ -116,7 +116,17 @@ export interface UserSummary {
 /** A notification for the current user. */
 export interface AppNotification {
   id: number;
-  type: 'follow_request' | 'follow_accepted' | 'new_follower';
+  type:
+    | 'follow_request'
+    | 'follow_accepted'
+    | 'new_follower'
+    | 'project_star'
+    | 'build_log_star'
+    | 'comment_star'
+    | 'suggestion_star'
+    | 'project_comment'
+    | 'build_log_comment'
+    | 'suggestion_comment';
   text: string;
   read: boolean;
   createdAt: string;
@@ -147,6 +157,60 @@ export interface FeedItem {
   builtText?: string | null;
   url?: string | null;
   icon?: string | null;
+}
+
+// ---------- Social: Log Stars, comments, suggestions ----------
+
+export type SocialTargetType = 'project' | 'build_log' | 'comment' | 'suggestion';
+
+export interface SocialActor {
+  username?: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface SocialComment {
+  id: number;
+  target_type: SocialTargetType;
+  target_id: number;
+  content: string;
+  created_at: string;
+  star_count: number;
+  author: SocialActor;
+}
+
+export interface SuggestionItem {
+  id: number;
+  content: string;
+  status: 'Open' | 'Planned' | 'Implemented' | 'Rejected';
+  created_at: string;
+  star_count: number;
+  comment_count: number;
+  starred_by_me: boolean;
+  author: SocialActor;
+}
+
+/** One build log inside the enriched project detail response */
+export interface ProjectLogWithStats {
+  id: number;
+  built: string;
+  learned: string;
+  problems: string;
+  next_steps: string;
+  created_at: string;
+  star_count: number;
+  starred_by_me: boolean;
+  comment_count: number;
+}
+
+/** GET /api/projects/:id/detail — everything the project page needs */
+export interface ProjectDetail {
+  project: Project & { readmeContent?: string | null; githubOwner?: string | null };
+  owner: SocialActor;
+  log_star: { count: number; starred_by_me: boolean };
+  logs: ProjectLogWithStats[];
+  comments: SocialComment[];
+  suggestions: SuggestionItem[];
 }
 
 // ---------- Integrations ----------

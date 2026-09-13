@@ -20,12 +20,19 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   const { actor, type } = notification;
 
   const icon =
-    type === 'follow_request' ? '🔐' : type === 'follow_accepted' ? '🎉' : '👤';
+    type === 'follow_request' ? '🔐'
+    : type === 'follow_accepted' ? '🎉'
+    : type === 'new_follower' ? '👤'
+    : type.includes('star') ? '🔥'
+    : type.includes('comment') ? '💬'
+    : '🔔';
 
   const targetLink =
     type === 'follow_request'
       ? '/notifications'
-      : `/u/${actor.username}`;
+      : type.startsWith('project_') || type.startsWith('build_log_') || type.startsWith('suggestion_')
+        ? '/home'
+        : `/u/${actor.username}`;
 
   const createdDate = new Date(notification.createdAt).toLocaleDateString('en-US', {
     month: 'short',

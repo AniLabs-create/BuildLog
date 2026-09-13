@@ -183,7 +183,7 @@ export const DashboardPage: React.FC = () => {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Link
                           to={`/projects/${project.id}`}
                           className="text-base font-semibold text-white hover:text-zinc-300 transition"
@@ -192,9 +192,15 @@ export const DashboardPage: React.FC = () => {
                         </Link>
                         <ProjectStatus status={project.status} />
                         {project.source === 'github' && (
-                          <span className="rounded border border-purple-500/40 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-purple-400">
+                          <span className="rounded border border-purple-500/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-purple-400">
                             GitHub
                           </span>
+                        )}
+                        {project.source === 'github' && project.stars > 0 && (
+                          <span className="font-mono text-xs text-zinc-500">⭐ {project.stars}</span>
+                        )}
+                        {project.source === 'github' && project.forks > 0 && (
+                          <span className="font-mono text-xs text-zinc-600">🍴 {project.forks}</span>
                         )}
                       </div>
                       <p className="mt-2 text-sm text-zinc-400 leading-relaxed">

@@ -8,6 +8,7 @@ from app.routes.follows import router as follows_router, requests_router as foll
 from app.routes.notifications import router as notifications_router
 from app.routes.feed import router as feed_router
 from app.routes.integrations import router as integrations_router
+from app.routes.social import router as social_router
 
 __all__ = [
     "health_router",
@@ -22,4 +23,5 @@ __all__ = [
     "notifications_router",
     "feed_router",
     "integrations_router",
+    "social_router",
 ]

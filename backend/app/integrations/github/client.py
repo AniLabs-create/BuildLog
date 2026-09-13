@@ -125,6 +125,26 @@ def push_file(
     }
 
 
+def get_readme(owner: str, repo: str, access_token: str) -> Optional[str]:
+    """
+    The repository's README markdown, decoded. Returns None when the repo
+    has no README (404) — never invents placeholder content.
+    """
+    try:
+        response = httpx.get(
+            f"{GITHUB_API}/repos/{owner}/{repo}/readme",
+            headers={**_headers(access_token), "Accept": "application/vnd.github.raw"},
+            timeout=20,
+        )
+    except httpx.HTTPError:
+        return None  # non-fatal: project syncs fine without a README
+    if response.status_code == 404:
+        return None
+    if response.status_code != 200:
+        return None
+    return response.text
+
+
 def revoke_token(client_id: str, client_secret: str, access_token: str) -> None:
     """Best-effort revoke of the stored token on disconnect (never raises)."""
     try:

@@ -6,6 +6,7 @@ from app.models.notification import Notification
 from app.models.activity import Activity
 from app.models.integration import GitHubIntegration, LeetCodeIntegration
 from app.models.external_activity import ExternalActivity
+from app.models.social import LogStar, Comment, Suggestion
 
 __all__ = [
     "User",
@@ -18,4 +19,7 @@ __all__ = [
     "GitHubIntegration",
     "LeetCodeIntegration",
     "ExternalActivity",
+    "LogStar",
+    "Comment",
+    "Suggestion",
 ]

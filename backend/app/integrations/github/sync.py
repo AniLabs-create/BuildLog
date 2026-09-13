@@ -29,6 +29,7 @@ def sync_repositories(db: Session, integration: GitHubIntegration) -> dict:
     for repo in repos:
         total_stars += repo.get("stargazers_count", 0)
         external_id = str(repo["id"])
+        owner = (repo.get("owner") or {}).get("login") or integration.github_username
 
         project = (
             db.query(Project)
@@ -49,10 +50,11 @@ def sync_repositories(db: Session, integration: GitHubIntegration) -> dict:
                 tech_stack.append(topic)
 
         if project is None:
+            # NOTE: db.add is REQUIRED — an unsaved Project is never persisted.
+            # Slug is generated after db.add so the uniqueness check sees it.
             project = Project(
                 user_id=integration.user_id,
                 name=repo["name"],
-                slug=generate_unique_slug(repo["name"], db),
                 description=repo.get("description") or "Imported from GitHub.",
                 # Derived from real signals only: archived -> Abandoned
                 status="Abandoned" if repo.get("archived") else "Building",
@@ -61,17 +63,25 @@ def sync_repositories(db: Session, integration: GitHubIntegration) -> dict:
                 external_provider="github",
                 external_id=external_id,
             )
+            db.add(project)
+            project.slug = generate_unique_slug(repo["name"], db)
             created += 1
-        elif repo.get("archived"):
-            project.status = "Abandoned"
-        updated += 1
+        else:
+            updated += 1
+            if repo.get("archived"):
+                project.status = "Abandoned"
 
+        project.github_owner = owner
         project.description = repo.get("description") or project.description
         project.github_url = repo.get("html_url")
         project.tech_stack = tech_stack
         project.stars = repo.get("stargazers_count", 0)
         project.forks = repo.get("forks_count", 0)
         project.last_synced_at = datetime.utcnow()
+
+        # README (primary branch) — stored so project pages render it offline
+        readme = client.get_readme(owner, repo["name"], token)
+        project.readme_content = readme
 
     integration.last_synced_at = datetime.utcnow()
     integration.stats_cache = {

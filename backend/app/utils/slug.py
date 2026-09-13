@@ -29,10 +29,16 @@ def generate_unique_slug(
     Generate a URL slug for a project name, guaranteeing it is not already
     taken by another project. If "smart-shortlist" exists, the next project
     with the same name becomes "smart-shortlist-2", then "-3", and so on.
+
+    Flushes first because the session runs with autoflush=False — pending
+    (db.add-ed) projects must be visible to the uniqueness queries, or two
+    same-named projects would get identical slugs.
     """
     base_slug = slugify(name)
     candidate = base_slug
     counter = 2
+
+    db.flush()  # make pending inserts visible to the uniqueness checks
 
     while True:
         query = db.query(Project).filter(Project.slug == candidate)
