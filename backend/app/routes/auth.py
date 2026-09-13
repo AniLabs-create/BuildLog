@@ -236,7 +236,7 @@ async def github_callback(
 
     jwt_token = create_access_token(data={"sub": str(user.id)})
     response = RedirectResponse(
-        f"{github_oauth_url_frontend()}/oauth/callback#token={jwt_token}",
+        f"{settings.FRONTEND_URL.rstrip('/')}/oauth/callback#token={jwt_token}",
         status_code=302,
     )
     response.delete_cookie("oauth_state")
