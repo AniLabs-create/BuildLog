@@ -8,7 +8,7 @@
  */
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  import.meta.env.VITE_API_URL || 'https://buildlog-zab9.onrender.com/api';
 
 interface RequestOptions extends RequestInit {
   data?: unknown;
