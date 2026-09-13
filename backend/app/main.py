@@ -23,108 +23,111 @@ from app.routes import (
 import app.models  # noqa: F401
 import app.integrations  # noqa: F401  (registers integration providers)
 
+# Columns that were added to models after their tables were first created.
+# Shape: (table, column, DDL definition usable by both SQLite and PostgreSQL).
+# Existing rows keep safe defaults (e.g. source='manual') — never fake data.
+SCHEMA_MIGRATIONS: list[tuple[str, str, str]] = [
+    ("projects", "slug", "VARCHAR(140) NOT NULL DEFAULT ''"),
+    ("projects", "visibility", "VARCHAR(10) NOT NULL DEFAULT 'public'"),
+    ("projects", "source", "VARCHAR(20) NOT NULL DEFAULT 'manual'"),
+    ("projects", "external_provider", "VARCHAR(30)"),
+    ("projects", "external_id", "VARCHAR(100)"),
+    ("projects", "stars", "INTEGER NOT NULL DEFAULT 0"),
+    ("projects", "forks", "INTEGER NOT NULL DEFAULT 0"),
+    ("projects", "last_synced_at", "TIMESTAMP"),
+    ("users", "display_name", "VARCHAR(100)"),
+    ("users", "bio", "VARCHAR(500)"),
+    ("users", "college", "VARCHAR(150)"),
+    ("users", "skills", "JSON"),
+    ("users", "avatar_url", "VARCHAR(500)"),
+    ("users", "branch", "VARCHAR(100)"),
+    ("users", "year", "VARCHAR(20)"),
+    ("users", "github_url", "VARCHAR(500)"),
+    ("users", "linkedin_url", "VARCHAR(500)"),
+    ("users", "portfolio_url", "VARCHAR(500)"),
+    ("users", "profile_visibility", "VARCHAR(10) NOT NULL DEFAULT 'public'"),
+    ("users", "profile_setup_complete", "BOOLEAN NOT NULL DEFAULT FALSE"),
+    ("users", "github_id", "INTEGER"),
+    ("github_integrations", "stats_cache", "JSON"),
+]
+
+# Columns whose addition marks "this database predates onboarding" so
+# pre-existing users can be marked setup-complete exactly once.
+ONBOARDING_EPOCH_COLUMNS = ("users", "profile_setup_complete")
+
+
+def _table_columns(conn, dialect: str, table: str) -> set:
+    """Existing column names for a table, per dialect."""
+    if dialect == "sqlite":
+        return {
+            row[1]
+            for row in conn.execute(text(f"PRAGMA table_info('{table}')")).fetchall()
+        }
+    return {
+        row[0]
+        for row in conn.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = :table_name"
+            ),
+            {"table_name": table},
+        ).fetchall()
+    }
+
+
+def _table_exists(conn, dialect: str, table: str) -> bool:
+    if dialect == "sqlite":
+        return (
+            conn.execute(
+                text("SELECT 1 FROM sqlite_master WHERE type='table' AND name=:name"),
+                {"name": table},
+            ).first()
+            is not None
+        )
+    return (
+        conn.execute(
+            text(
+                "SELECT 1 FROM information_schema.tables "
+                "WHERE table_schema = 'public' AND table_name = :name"
+            ),
+            {"name": table},
+        ).first()
+        is not None
+    )
+
+
 def run_startup_migrations() -> None:
     """
-    Lightweight development-phase migrations.
+    Idempotent, additive schema migration for existing databases.
 
-    SQLAlchemy's create_all() only creates MISSING tables — it never alters
-    existing ones. Before a real migration tool (like Alembic) is introduced,
-    we patch the schema manually here so already-created dev databases
-    (e.g. the local SQLite file) gain new columns without being deleted.
+    Safe to run on every startup and against production data:
+    - checks information_schema/PRAGMA FIRST, so no statement can ever fail
+      with "column already exists" (in PostgreSQL a failed statement aborts
+      the whole transaction, which silently skipped every later ALTER in the
+      previous try/except implementation),
+    - only ADDS missing columns; never drops columns or deletes rows,
+    - leaves NULLable new fields NULL for existing rows (no invented data);
+      NOT NULL columns get a default consistent with the model
+      (e.g. projects.source stays 'manual' for existing projects).
     """
-    added_profile_columns = False
+    dialect = engine.dialect.name
+    added_onboarding_columns = False
+
     with engine.begin() as conn:
-        # Add the project 'slug' column if it does not exist yet
-        if engine.dialect.name == "sqlite":
-            has_slug = conn.execute(
-                text("SELECT 1 FROM pragma_table_info('projects') WHERE name='slug'")
-            ).first()
-            if not has_slug:
-                conn.execute(
-                    text("ALTER TABLE projects ADD COLUMN slug VARCHAR(140) NOT NULL DEFAULT ''")
-                )
+        for table, column, definition in SCHEMA_MIGRATIONS:
+            if not _table_exists(conn, dialect, table):
+                continue  # brand-new tables are created by create_all()
+            if column in _table_columns(conn, dialect, table):
+                continue  # already migrated — idempotent no-op
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))
+            if (table, column) == ONBOARDING_EPOCH_COLUMNS:
+                added_onboarding_columns = True
 
-            # Milestone 9: project visibility (public/private)
-            project_cols = {
-                row[1]
-                for row in conn.execute(text("PRAGMA table_info('projects')")).fetchall()
-            }
-            if "visibility" not in project_cols:
-                conn.execute(
-                    text("ALTER TABLE projects ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'public'")
-                )
-
-            # Integrations milestone: project sync-identity columns
-            project_new_cols = {
-                "source": "VARCHAR(20) NOT NULL DEFAULT 'manual'",
-                "external_provider": "VARCHAR(30)",
-                "external_id": "VARCHAR(100)",
-                "stars": "INTEGER NOT NULL DEFAULT 0",
-                "forks": "INTEGER NOT NULL DEFAULT 0",
-                "last_synced_at": "TIMESTAMP",
-            }
-            for column, definition in project_new_cols.items():
-                if column not in project_cols:
-                    conn.execute(text(f"ALTER TABLE projects ADD COLUMN {column} {definition}"))
-
-            # Integration tables may predate newer columns (create_all never alters)
-            if "github_integrations" in (
-                t[0] for t in conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
-            ):
-                gi_cols = {
-                    row[1]
-                    for row in conn.execute(text("PRAGMA table_info('github_integrations')")).fetchall()
-                }
-                if "stats_cache" not in gi_cols:
-                    conn.execute(text("ALTER TABLE github_integrations ADD COLUMN stats_cache JSON"))
-
-                # SQLite never enforced FK cascades before PRAGMA foreign_keys=ON
-                # was enabled (see database.py) — clean up rows from deleted users.
-                conn.execute(text("DELETE FROM activities WHERE user_id NOT IN (SELECT id FROM users)"))
-                conn.execute(text("DELETE FROM external_activities WHERE user_id NOT IN (SELECT id FROM users)"))
-
-            # Milestone 5: profile columns for account setup (+ GitHub OAuth link)
-            existing = {
-                row[1]
-                for row in conn.execute(text("PRAGMA table_info('users')")).fetchall()
-            }
-            user_columns = {
-                "display_name": "VARCHAR(100)",
-                "branch": "VARCHAR(100)",
-                "year": "VARCHAR(20)",
-                "github_url": "VARCHAR(500)",
-                "linkedin_url": "VARCHAR(500)",
-                "portfolio_url": "VARCHAR(500)",
-                "profile_visibility": "VARCHAR(10) NOT NULL DEFAULT 'public'",
-                "profile_setup_complete": "BOOLEAN NOT NULL DEFAULT 0",
-                "github_id": "INTEGER",
-            }
-            for column, definition in user_columns.items():
-                if column not in existing:
-                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {column} {definition}"))
-                    added_profile_columns = True
-        else:
-            # PostgreSQL: add each column independently, ignoring "already exists"
-            # (one shared try/except would abort before later statements run)
-            pg_statements = [
-                "ALTER TABLE projects ADD COLUMN slug VARCHAR(140) NOT NULL DEFAULT ''",
-                "ALTER TABLE projects ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'public'",
-                "ALTER TABLE projects ADD COLUMN source VARCHAR(20) NOT NULL DEFAULT 'manual'",
-                "ALTER TABLE projects ADD COLUMN external_provider VARCHAR(30)",
-                "ALTER TABLE projects ADD COLUMN external_id VARCHAR(100)",
-                "ALTER TABLE projects ADD COLUMN stars INTEGER NOT NULL DEFAULT 0",
-                "ALTER TABLE projects ADD COLUMN forks INTEGER NOT NULL DEFAULT 0",
-                "ALTER TABLE projects ADD COLUMN last_synced_at TIMESTAMP",
-                "ALTER TABLE github_integrations ADD COLUMN stats_cache JSON",
-                "ALTER TABLE users ADD COLUMN profile_setup_complete BOOLEAN NOT NULL DEFAULT FALSE",
-                "ALTER TABLE users ADD COLUMN github_id INTEGER",
-            ]
-            for statement in pg_statements:
-                try:
-                    conn.execute(text(statement))
-                    added_profile_columns = True
-                except Exception:
-                    pass  # column already exists
+        # SQLite never enforced FK cascades before PRAGMA foreign_keys=ON
+        # (see database.py) — clean up rows orphaned by deleted users.
+        if dialect == "sqlite" and _table_exists(conn, dialect, "external_activities"):
+            conn.execute(text("DELETE FROM activities WHERE user_id NOT IN (SELECT id FROM users)"))
+            conn.execute(text("DELETE FROM external_activities WHERE user_id NOT IN (SELECT id FROM users)"))
 
     # Backfill slugs for projects created before slugs existed
     from app.utils.slug import generate_unique_slug
@@ -137,11 +140,11 @@ def run_startup_migrations() -> None:
         for project in projects_without_slug:
             project.slug = generate_unique_slug(project.name, db)
 
-        # Milestone 5: ONLY on the very first run that adds these columns,
-        # mark pre-existing users as setup-complete (they never saw onboarding)
-        # and default their display name to the username. Running this every
-        # startup would wrongly "complete" the setup of new real users.
-        if added_profile_columns:
+        # ONLY on the very first migration that adds onboarding columns:
+        # mark pre-existing users as setup-complete (they never saw
+        # onboarding). Running this every startup would wrongly "complete"
+        # the setup of new real users.
+        if added_onboarding_columns:
             existing_users = db.query(User).filter(User.display_name.is_(None)).all()
             for user in existing_users:
                 user.display_name = user.username
