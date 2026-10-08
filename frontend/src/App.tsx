@@ -20,6 +20,12 @@ import { SettingsPage } from './pages/SettingsPage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
 import { PublicProjectPage } from './pages/PublicProjectPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { PortfolioDashboardPage } from './pages/PortfolioDashboardPage';
+import { CreatePortfolioPage } from './pages/CreatePortfolioPage';
+import { TemplateGalleryPage } from './pages/TemplateGalleryPage';
+import { PortfolioEditorPage } from './pages/PortfolioEditorPage';
+import { PortfolioPreviewPage } from './pages/PortfolioPreviewPage';
+import { PublicPortfolioViewPage } from './pages/PublicPortfolioViewPage';
 
 /**
  * App Component
@@ -32,6 +38,14 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Public standalone portfolio website */}
+          <Route path="/p/:username/:portfolioSlug" element={<PublicPortfolioViewPage />} />
+
+          {/* Standalone Fullscreen Portfolio Preview */}
+          <Route element={<ProtectedRoute requireCompleteProfile />}>
+            <Route path="/portfolio/:id/preview" element={<PortfolioPreviewPage />} />
+          </Route>
+
           <Route element={<RootLayout />}>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -60,6 +74,12 @@ function App() {
               <Route path="/projects/:id/edit" element={<EditProjectPage />} />
               <Route path="/projects/:id/log/new" element={<CreateBuildLogPage />} />
               <Route path="/projects/:id/log/:logId/edit" element={<EditBuildLogPage />} />
+
+              {/* Portfolio SaaS Routes */}
+              <Route path="/portfolio" element={<PortfolioDashboardPage />} />
+              <Route path="/portfolio/new" element={<CreatePortfolioPage />} />
+              <Route path="/portfolio/templates" element={<TemplateGalleryPage />} />
+              <Route path="/portfolio/:id/edit" element={<PortfolioEditorPage />} />
             </Route>
 
             {/* Catch-all 404 Route */}

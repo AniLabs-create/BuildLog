@@ -47,8 +47,12 @@ interface RawDashboardSummary {
   recent_activity: RawTimelineItem[];
 }
 
+function getClientTzOffset(): number {
+  return -new Date().getTimezoneOffset();
+}
+
 export async function getStreak(): Promise<StreakInfo> {
-  const data = await apiRequest<RawStreakResponse>('/stats/streak');
+  const data = await apiRequest<RawStreakResponse>(`/stats/streak?tz_offset=${getClientTzOffset()}`);
   return {
     currentStreak: data.current_streak,
     longestStreak: data.longest_streak,
@@ -72,7 +76,7 @@ export async function getTimeline(): Promise<TimelineItem[]> {
 }
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const data = await apiRequest<RawDashboardSummary>('/stats/dashboard');
+  const data = await apiRequest<RawDashboardSummary>(`/stats/dashboard?tz_offset=${getClientTzOffset()}`);
   return {
     currentStreak: data.current_streak,
     longestStreak: data.longest_streak,

@@ -38,11 +38,12 @@ class DashboardSummaryResponse(BaseModel):
 def get_user_streak(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    tz_offset: Optional[int] = None,
 ):
     """
     Returns server-calculated streak statistics for the authenticated user.
     """
-    return calculate_user_streak(current_user.id, db)
+    return calculate_user_streak(current_user.id, db, tz_offset_minutes=tz_offset)
 
 @router.get("/timeline", response_model=List[TimelineItem])
 def get_user_timeline(
@@ -80,6 +81,7 @@ def get_user_timeline(
 def get_dashboard_summary(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    tz_offset: Optional[int] = None,
 ):
     """
     Aggregates dashboard stats in a single fast endpoint:
@@ -87,7 +89,7 @@ def get_dashboard_summary(
     - project and log counters
     - recent timeline entries
     """
-    streak_info = calculate_user_streak(current_user.id, db)
+    streak_info = calculate_user_streak(current_user.id, db, tz_offset_minutes=tz_offset)
     project_count = db.query(Project).filter(Project.user_id == current_user.id).count()
     log_count = db.query(BuildLog).filter(BuildLog.user_id == current_user.id).count()
 

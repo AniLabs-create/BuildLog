@@ -18,6 +18,9 @@ from app.routes import (
     feed_router,
     integrations_router,
     social_router,
+    portfolio_router,
+    public_portfolio_router,
+    entitlements_router,
 )
 
 # Import all models to ensure they are registered with SQLAlchemy Base metadata
@@ -202,6 +205,9 @@ app.include_router(notifications_router, prefix="/api")
 app.include_router(feed_router, prefix="/api")
 app.include_router(integrations_router, prefix="/api")
 app.include_router(social_router, prefix="/api")
+app.include_router(portfolio_router, prefix="/api")
+app.include_router(public_portfolio_router, prefix="/api")
+app.include_router(entitlements_router, prefix="/api")
 
 @app.get("/", tags=["root"])
 def root():

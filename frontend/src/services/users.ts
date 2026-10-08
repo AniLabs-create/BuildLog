@@ -176,8 +176,9 @@ interface RawPublicProject {
 }
 
 export async function getPublicProfile(username: string): Promise<PublicProfile> {
+  const tzOffset = -new Date().getTimezoneOffset();
   const data = await apiRequest<RawPublicProfile>(
-    `/users/${encodeURIComponent(username)}`
+    `/users/${encodeURIComponent(username)}?tz_offset=${tzOffset}`
   );
 
   return {

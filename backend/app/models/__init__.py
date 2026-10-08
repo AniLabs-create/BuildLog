@@ -8,6 +8,9 @@ from app.models.integration import GitHubIntegration, LeetCodeIntegration
 from app.models.external_activity import ExternalActivity
 from app.models.social import LogStar, Comment, Suggestion
 
+from app.models.portfolio import Portfolio, PortfolioVersion
+from app.models.entitlement import UserEntitlement
+
 __all__ = [
     "User",
     "Project",
@@ -22,4 +25,8 @@ __all__ = [
     "LogStar",
     "Comment",
     "Suggestion",
+    "Portfolio",
+    "PortfolioVersion",
+    "UserEntitlement",
 ]
+

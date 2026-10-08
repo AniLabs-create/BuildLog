@@ -369,3 +369,6 @@ export interface PublicProject {
   owner: ProjectOwner;
   logs: BuildLog[];
 }
+
+export * from './portfolio';
+

@@ -170,7 +170,12 @@ def update_my_profile(
 
 
 @router.get("/{username}")
-def get_public_profile(username: str, db: Session = Depends(get_db), viewer: Optional[User] = Depends(get_optional_current_user)):
+def get_public_profile(
+    username: str,
+    db: Session = Depends(get_db),
+    viewer: Optional[User] = Depends(get_optional_current_user),
+    tz_offset: Optional[int] = None,
+):
     """
     Public developer profile for /u/{username}.
 
@@ -222,7 +227,7 @@ def get_public_profile(username: str, db: Session = Depends(get_db), viewer: Opt
         })
         return base
 
-    streak_info = calculate_user_streak(user.id, db)
+    streak_info = calculate_user_streak(user.id, db, tz_offset_minutes=tz_offset)
     project_count = db.query(Project).filter(Project.user_id == user.id).count()
     log_count = db.query(BuildLog).filter(BuildLog.user_id == user.id).count()
 

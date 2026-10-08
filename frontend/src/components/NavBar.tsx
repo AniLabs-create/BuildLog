@@ -51,6 +51,7 @@ export const NavBar: React.FC = () => {
   const appLinks: Array<{ to: string; label: string; badge?: number }> = [
     { to: '/home', label: 'Home' },
     { to: '/dashboard', label: 'Projects' },
+    { to: '/portfolio', label: 'Portfolio' },
     { to: '/search', label: 'Search' },
     { to: '/notifications', label: 'Notifications', badge: unreadCount },
   ];

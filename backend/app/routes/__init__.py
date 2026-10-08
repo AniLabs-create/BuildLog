@@ -9,6 +9,8 @@ from app.routes.notifications import router as notifications_router
 from app.routes.feed import router as feed_router
 from app.routes.integrations import router as integrations_router
 from app.routes.social import router as social_router
+from app.routes.portfolio import router as portfolio_router, public_portfolio_router
+from app.routes.entitlements import router as entitlements_router
 
 __all__ = [
     "health_router",
@@ -24,4 +26,7 @@ __all__ = [
     "feed_router",
     "integrations_router",
     "social_router",
+    "portfolio_router",
+    "public_portfolio_router",
+    "entitlements_router",
 ]
