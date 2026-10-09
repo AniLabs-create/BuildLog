@@ -4,6 +4,7 @@ public rendering, and AI Portfolio Agent interactions.
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -373,14 +374,10 @@ def restore_version(
 
 
 # ---------- 9. AI Portfolio Agent Chat & Actions ----------
-class AIChatRequest(BaseModel_ := Any):
-    pass
-
-from pydantic import BaseModel as _BM
-class AIChatPayload(_BM):
+class AIChatPayload(BaseModel):
     prompt: str
 
-class AIApplyPayload(_BM):
+class AIApplyPayload(BaseModel):
     action: Dict[str, Any]
 
 @router.post("/{portfolio_id}/ai/chat")

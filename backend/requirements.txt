@@ -5,6 +5,9 @@ pydantic>=2.0.0,<3.0.0
 pydantic-settings>=2.0.0,<3.0.0
 python-dotenv>=1.0.0,<2.0.0
 psycopg2-binary>=2.9.9,<3.0.0
+# Psycopg 3 driver — required when DATABASE_URL uses the postgresql+psycopg://
+# scheme (e.g. Render/Neon connection strings). Ships prebuilt wheels incl. Python 3.14.
+psycopg[binary]>=3.1.0,<4.0.0
 email-validator>=2.0.0,<3.0.0
 bcrypt>=4.0.0,<5.0.0
 pyjwt>=2.8.0,<3.0.0

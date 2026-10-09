@@ -1,9 +1,14 @@
+from contextlib import contextmanager
 from fastapi.testclient import TestClient
 from app.main import app
 
-client = TestClient(app)
+@contextmanager
+def make_client():
+    # Context manager so the lifespan runs: tables are created on a fresh DB.
+    with TestClient(app) as c:
+        yield c
 
-def run_tests():
+def run_tests(client):
     print("--- 1. Testing Health Endpoint ---")
     res = client.get("/health")
     assert res.status_code == 200, f"Health failed: {res.text}"
@@ -102,4 +107,5 @@ def run_tests():
     print("==========================================")
 
 if __name__ == "__main__":
-    run_tests()
+    with make_client() as c:
+        run_tests(c)

@@ -7,3 +7,5 @@ venv/
 *.db
 *.sqlite3
 .pytest_cache/
+uvicorn.pid
+uvicorn_test.log

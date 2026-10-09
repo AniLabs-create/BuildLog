@@ -224,17 +224,17 @@ def _generate_rule_based_ai_response(prompt: str, current_data: Dict[str, Any]) 
     if any(kw in prompt_lower for kw in ["project", "descriptions", "impact", "polish"]):
         projects = current_data.get("projects_data", [])
         if projects:
-            for i, p in enumerate(projects[:3]):
+            # Only reorder/re-feature existing projects. The rule-based assistant
+            # must never invent problem/solution/impact claims — fabricating
+            # project results requires a real AI provider (see below).
+            featured_ids = [p.get("id") for p in projects if p.get("featured")]
+            if featured_ids and len(featured_ids) < len(projects):
                 actions.append({
-                    "type": "UPDATE_PROJECT",
-                    "payload": {
-                        "index": i,
-                        "problem": p.get("problem") or "Addressed system scalability and real-time responsiveness bottlenecks.",
-                        "solution": p.get("solution") or "Designed modular architecture using typed APIs and optimized state persistence.",
-                        "impact": p.get("impact") or "Reduced latency and delivered seamless user experience.",
-                    }
+                    "type": "REORDER_PROJECTS",
+                    "payload": {"project_ids": featured_ids + [p.get("id") for p in projects if p.get("id") not in featured_ids]},
                 })
-            return actions, "I've enriched your top projects with structured **Problem**, **Solution**, and **Impact** breakdowns."
+                return actions, "I've reordered your projects so the featured ones lead. For rewriting project problem/solution/impact copy, connect an AI provider (GEMINI_API_KEY or OPENAI_API_KEY) — I won't invent results on your behalf."
+            return actions, "Polishing project problem/solution/impact copy needs a configured AI provider (GEMINI_API_KEY or OPENAI_API_KEY). I won't fabricate project results, but once a provider is connected I can rewrite your existing descriptions factually."
 
     # Default general improvement
     actions.append({
