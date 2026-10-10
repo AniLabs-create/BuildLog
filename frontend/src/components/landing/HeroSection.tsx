@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../hooks/useAuth';
+import logoFull from '../../assets/brand/logo-full.png';
 
 /**
  * HeroSection Component
@@ -21,6 +22,13 @@ export const HeroSection: React.FC = () => {
       </div>
 
       <div className="relative mx-auto max-w-4xl text-center px-4 sm:px-6">
+        {/* Brand logo lockup */}
+        <img
+          src={logoFull}
+          alt="BuildLog"
+          className="mx-auto mb-8 w-36 rounded-xl border border-zinc-800/60 shadow-lg shadow-black/30 sm:w-44"
+        />
+
         {/* Category / Badge */}
         <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/80 px-3.5 py-1 text-xs font-medium text-zinc-400 mb-8 backdrop-blur-sm">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/Button';
 import { useAuth } from '../hooks/useAuth';
 import { getNotifications } from '../services/notifications';
+import logoMark from '../assets/brand/logo-mark.png';
 
 /**
  * NavBar Component
@@ -65,8 +66,8 @@ export const NavBar: React.FC = () => {
             to={isAuthenticated ? '/home' : '/'}
             className="flex items-center gap-2 font-mono text-lg font-bold tracking-tight text-white transition hover:opacity-90"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-700/60">
-              &gt;_
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded bg-zinc-800 border border-zinc-700/60">
+              <img src={logoMark} alt="BuildLog" className="h-full w-full object-cover" />
             </span>
             <span>
               Build<span className="text-zinc-400">Log</span>

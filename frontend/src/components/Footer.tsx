@@ -1,4 +1,5 @@
 import React from 'react';
+import logoMark from '../assets/brand/logo-mark.png';
 
 /**
  * Footer Component
@@ -13,8 +14,8 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
             <div className="flex items-center gap-2 font-mono text-base font-bold text-white">
-              <span className="flex h-6 w-6 items-center justify-center rounded bg-zinc-800 text-xs font-semibold text-zinc-300 border border-zinc-700/60">
-                &gt;_
+              <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded bg-zinc-800 border border-zinc-700/60">
+                <img src={logoMark} alt="BuildLog" className="h-full w-full object-cover" />
               </span>
               <span>
                 Build<span className="text-zinc-400">Log</span>

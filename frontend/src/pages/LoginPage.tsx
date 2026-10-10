@@ -5,6 +5,7 @@ import { GitHubButton } from '../components/auth/GitHubButton';
 import { useAuth } from '../hooks/useAuth';
 import { API_BASE_URL } from '../services/api';
 import { getErrorMessage } from '../utils/errors';
+import logoMark from '../assets/brand/logo-mark.png';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,8 +51,8 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-8 shadow-xl backdrop-blur-sm">
           <div className="mb-8 text-center">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 font-mono text-sm font-bold text-white mb-3">
-              &gt;_
+            <div className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-zinc-700/60 mb-3">
+              <img src={logoMark} alt="BuildLog logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white">
               Welcome back
